@@ -1,0 +1,22 @@
+﻿
+@{
+    ViewData["Title"] = "Shop at the Georgian Computer Store!";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Please choose a Product</h1>
+
+<ul>
+    <li>
+        <a asp-controller="Store" asp-action="Details" asp-route-product="Macbook"> Macbook</a>
+    </li>
+    <li>
+        <a asp-controller="Store" asp-action="Details" asp-route-product="Dell Laptop"> Dell Laptop</a>
+    </li>
+    <li>
+        <a asp-controller="Store" asp-action="Details" asp-route-product="iPhone"> iPhone</a>
+    </li>
+    <li>
+        <a asp-controller="Store" asp-action="Details" asp-route-product="Android Phone"> Android Phone</a>
+    </li>
+</ul>
