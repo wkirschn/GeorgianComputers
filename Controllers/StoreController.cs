@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using GeorgianComputers.Models;
 
 namespace GeorgianComputers.Controllers
 {
@@ -10,7 +11,15 @@ namespace GeorgianComputers.Controllers
     {
         public IActionResult Index()
         {
-            return View();
+            var products = new List<Product>();
+            //We will use a for loop to populate the product list
+            for(var i = 1; i <= 10; i++)
+            {
+                products.Add(new Product { Name = "Product " + i.ToString() });
+            }
+
+
+            return View(products);
         }
 
         public IActionResult Details(string product)

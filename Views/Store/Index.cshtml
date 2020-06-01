@@ -1,4 +1,4 @@
-﻿
+﻿@model IEnumerable<GeorgianComputers.Models.Product>
 @{
     ViewData["Title"] = "Shop at the Georgian Computer Store!";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -7,16 +7,21 @@
 <h1>Please choose a Product</h1>
 
 <ul>
-    <li>
-        <a asp-controller="Store" asp-action="Details" asp-route-product="Macbook"> Macbook</a>
+    @*<li>
+        <a asp-controller="store" asp-action="details" asp-route-product="macbook"> macbook</a>
     </li>
     <li>
-        <a asp-controller="Store" asp-action="Details" asp-route-product="Dell Laptop"> Dell Laptop</a>
+        <a asp-controller="store" asp-action="details" asp-route-product="dell laptop"> dell laptop</a>
     </li>
     <li>
-        <a asp-controller="Store" asp-action="Details" asp-route-product="iPhone"> iPhone</a>
+        <a asp-controller="store" asp-action="details" asp-route-product="iphone"> iphone</a>
     </li>
     <li>
-        <a asp-controller="Store" asp-action="Details" asp-route-product="Android Phone"> Android Phone</a>
-    </li>
+        <a asp-controller="store" asp-action="details" asp-route-product="android phone"> android phone</a>
+    </li>*@
+    @foreach (var product in Model)
+    {
+        <li><a asp-controller="Store" asp-action="Details" asp-route-product="@product.Name">@product.Name</a></li>
+    }
+
 </ul>
