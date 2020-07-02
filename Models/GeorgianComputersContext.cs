@@ -1,10 +1,11 @@
 ﻿using System;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace GeorgianComputers.Models
 {
-    public partial class GeorgianComputersContext : DbContext
+    public partial class GeorgianComputersContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
         public GeorgianComputersContext()
         {
@@ -25,13 +26,16 @@ namespace GeorgianComputers.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Data Source=WKIRSCHN\\SQLSERVER2019;Initial Catalog=GeorgianComputers;Integrated Security=True");
+/*#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+                optionsBuilder.UseSqlServer("Data Source=WKIRSCHN\\SQLSERVER2019;Initial Catalog=GeorgianComputers;Integrated Security=True");*/
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            base.OnModelCreating(modelBuilder); // THIS IS FOR A BUG FIX, USE IT!
+
             modelBuilder.Entity<Cart>(entity =>
             {
                 entity.Property(e => e.CartId).IsUnicode(false);
