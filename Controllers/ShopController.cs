@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
+using Stripe;
 
 namespace GeorgianComputers.Controllers
 {
@@ -19,10 +21,23 @@ namespace GeorgianComputers.Controllers
 
         private readonly GeorgianComputersContext _context; //Will be different for my site, note the underscore
 
+        //Add configuration so controller can read config value appsettings.json
+        private IConfiguration _configuration;
 
-        public ShopController(GeorgianComputersContext context)
+
+
+
+        public ShopController(GeorgianComputersContext context, IConfiguration configuration) // Dependenacy Injection
         {
+            //accept an instance of our DB connection class and use this object connection, underscore means an object that is being injected, similar to this.
+
             _context = context;
+
+            // accept an instance of the configuration object so we can read appsetting.json
+
+            _configuration = configuration;
+
+
         }
 
 
@@ -188,7 +203,7 @@ namespace GeorgianComputers.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
 
-        public IActionResult Checkout([Bind("FirstName, LastName, Address, City, Province, PostalCode, Phone")] Order order) // GET
+        public IActionResult Checkout([Bind("FirstName, LastName, Address, City, Province, PostalCode, Phone")] Models.Order order) // GET
         {
             // Autofill the date, user, and total properties instead of the user doing this
             order.OrderDate = DateTime.Now;
@@ -201,7 +216,12 @@ namespace GeorgianComputers.Controllers
 
 
             // Will NEED and EXTENSION to the .Net Core Session object to store the order Object - in the next video!
-            HttpContext.Session.SetString("cartTotal", cartTotal.ToString());
+            //HttpContext.Session.SetString("cartTotal", cartTotal.ToString());
+
+            // We now have the session to the complex object
+
+            HttpContext.Session.SetObject("Order", order);
+
 
             return RedirectToAction("Payment");
         }
@@ -236,7 +256,98 @@ namespace GeorgianComputers.Controllers
 
         public IActionResult Payment()
         {
+            //Setup payment page to show order total
+
+            // 1. Get the order from the session variable
+            var order = HttpContext.Session.GetObject<Models.Order>("Order");
+
+            // 2. Use Viewbag to display total and pass the amount to Stripe
+            ViewBag.Total = order.Total;
+            ViewBag.CentsTotal = order.Total * 100; // Stripe uses cents, not dollars and cents
+            ViewBag.PublishableKey = _configuration.GetSection("Stripe")["PublishableKey"];
+
+
+
+
             return View();
+        }
+
+        // Need to get 2 things back from Stripe after authorization
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Payment(string stripeEmail, string stripeToken)
+        {
+
+            //send payment to stripe
+            StripeConfiguration.ApiKey = _configuration.GetSection("Stripe")["SecretKey"];
+            var cartUsername = HttpContext.Session.GetString("CartUsername");
+            var cartItems = _context.Cart.Where(c => c.Username == cartUsername);
+            var order = HttpContext.Session.GetObject<Models.Order>("Order");
+
+            //new stripe payment attempt
+
+            var customerService = new CustomerService();
+            var chargeservices = new ChargeService();
+            //new customer email from payment form, token auto-generated on payment form also
+            var customer = customerService.Create(new CustomerCreateOptions
+            {
+                Email = stripeEmail,
+                Source = stripeToken
+
+            });
+
+            //new charge using customer created above
+            var charge = chargeservices.Create(new ChargeCreateOptions
+            {
+                Amount = Convert.ToInt32(order.Total * 100),
+                Description = "Georgian Computers Purchase",
+                Currency = "cad",
+                Customer = customer.Id
+            });
+
+            //generate and save new order
+            _context.Order.Add(order);
+            _context.SaveChanges();
+
+            //save order details
+            foreach (var item in cartItems)
+            {
+                var orderDetail = new OrderDetail
+                {
+                    OrderId = order.OrderId,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Price
+                };
+                _context.OrderDetail.Add(orderDetail);
+            }
+            _context.SaveChanges();
+
+
+            //delete the cart
+            foreach(var item in cartItems)
+            {
+                _context.Cart.Remove(item);
+            }
+            _context.SaveChanges();
+
+
+
+            //confirm with a receipt for the new orderId
+
+
+
+
+
+
+
+
+            return RedirectToAction("Details", "Orders", new { id = order.OrderId });
+
+
+
         }
 
 

@@ -53,6 +53,10 @@ namespace GeorgianComputers
             //1. Add Session Support
             services.AddSession();
 
+            //Stripe//
+            //Make Configuration Value from appsettings.json avaliable to the controller
+            services.AddSingleton<IConfiguration>(Configuration);
+
 
         }
 
